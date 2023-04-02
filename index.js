@@ -69,6 +69,12 @@ class BotController {
                     case MAIN_MENU_UI_CONTROLS_EVENT.SET_CURRENCY_VALUE:
                         UIManager.setCurrencyValueUI(chatId)
                         break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.SET_CURRENCY_MIN_SUM:
+                        UIManager.setCurrencyMinSumUI(chatId)
+                        break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.SET_CURRENCY_RESERVE:
+                        UIManager.setCurrencyReserveUI(chatId)
+                        break;
                     case SET_CURRENCY_EVENT[query.data]:
                         this.currencyAwait = true;
                         break;

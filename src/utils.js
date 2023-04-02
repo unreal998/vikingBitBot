@@ -38,7 +38,23 @@ function getEmoji(emojiName) {
         case EMOJI_NAMES.LINK:
             return '🔗'
         case EMOJI_NAMES.NOTIFICATION:
-            return '✍️'
+            return '📢'
+        case EMOJI_NAMES.RESERVED:
+            return '💰'
+        case EMOJI_NAMES.LIST:
+            return '📝'
+        case EMOJI_NAMES.DETAIL:
+            return '🔎'
+        case EMOJI_NAMES.DOWN:
+            return '🔻'
+        case EMOJI_NAMES.USD:
+            return '💵'
+        case EMOJI_NAMES.EUR:
+            return '💶'
+        case EMOJI_NAMES.CARD:
+            return '💳'
+        case EMOJI_NAMES.MONEY:
+            return '💸'
         default:
             return '❓'
     }

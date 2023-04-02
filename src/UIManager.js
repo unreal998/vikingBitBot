@@ -15,10 +15,12 @@ class UIManager {
         this.adminMainMenuUI = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: `${getEmoji(EMOJI_NAMES.CREATE_LINK)} Виставити курс`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.SET_CURRENCY_VALUE }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.MY_LINKS)} Переглянути останні транзакції`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CHAT }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.MY_LINKS)} Переглянути транзакцію`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CHAT }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.MY_LINKS)} Зробити оголошення`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.NOTIFICATION }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.CHANGE_PRICE)} Виставити курс`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.SET_CURRENCY_VALUE }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.DOWN)} Виставити мінімальну суму`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.SET_CURRENCY_MIN_SUM }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.RESERVED)} Виставити резерв`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.SET_CURRENCY_RESERVE }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.LIST)} Переглянути останні транзакції`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CHAT }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.DETAIL)} Переглянути транзакцію`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CHAT }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.NOTIFICATION)} Зробити оголошення`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.NOTIFICATION }],
                     [{ text: `${getEmoji(EMOJI_NAMES.SETTINGS)} Про бот`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.BOT_INFO }],
                 ]
             }
@@ -26,12 +28,13 @@ class UIManager {
         this.currencylistUI = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: `${getEmoji(EMOJI_NAMES.MY_LINKS)} USDT: `, callback_data: SET_CURRENCY_EVENT.USDT }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.MY_LINKS)} USDS: `, callback_data: SET_CURRENCY_EVENT.USDS }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.MY_LINKS)} EUR: `, callback_data: SET_CURRENCY_EVENT.EUR }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.MY_LINKS)} USD: `, callback_data: SET_CURRENCY_EVENT.USD }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.MY_LINKS)} BTC: `, callback_data: SET_CURRENCY_EVENT.BTC }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.MY_LINKS)} ETH: `, callback_data: SET_CURRENCY_EVENT.ETH }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.MONEY)} USDT: `, callback_data: SET_CURRENCY_EVENT.USDT }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.MONEY)} USDS: `, callback_data: SET_CURRENCY_EVENT.USDS }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.EUR)} EUR: `, callback_data: SET_CURRENCY_EVENT.EUR }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.USD)} USD: `, callback_data: SET_CURRENCY_EVENT.USD }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.CARD)} UAH: `, callback_data: SET_CURRENCY_EVENT.UAH }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.MONEY)} BTC: `, callback_data: SET_CURRENCY_EVENT.BTC }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.MONEY)} ETH: `, callback_data: SET_CURRENCY_EVENT.ETH }],
                 ]
             }
         }
@@ -58,6 +61,14 @@ class UIManager {
     }
 
     setCurrencyValueUI(chatId) {
+        this.bot.sendMessage(chatId, `Оберіть валюту`, this.currencylistUI);
+    }
+
+    setCurrencyMinSumUI(chatId) {
+        this.bot.sendMessage(chatId, `Оберіть валюту`, this.currencylistUI);
+    }
+
+    setCurrencyReserveUI(chatId) {
         this.bot.sendMessage(chatId, `Оберіть валюту`, this.currencylistUI);
     }
 
