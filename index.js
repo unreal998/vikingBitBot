@@ -67,6 +67,14 @@ class BotController {
                     let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_VALUE)(.*)/gm)];
                     query.data = separateChatId[0][1];
                     dataParam = separateChatId[0][2];
+                } else if (query.data.includes(CURRENCY_EVENT.SET_CURRENCY_RESERVE)) {
+                    let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_RESERVE)(.*)/gm)];
+                    query.data = separateChatId[0][1];
+                    dataParam = separateChatId[0][2];
+                } else if (query.data.includes(CURRENCY_EVENT.SET_CURRENCY_MIN_SUM)) {
+                    let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_MIN_SUM)(.*)/gm)];
+                    query.data = separateChatId[0][1];
+                    dataParam = separateChatId[0][2];
                 }
                 switch (query.data) {
                     case MAIN_MENU_UI_CONTROLS_EVENT.NOTIFICATION:
@@ -76,9 +84,12 @@ class BotController {
                     case MAIN_MENU_UI_CONTROLS_EVENT.GET_CURRENCY_LIST:
                         this.getCurrencyList(chatId);
                         break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.BOT_INFO:
+                        UIManager.botInfo(chatId);
+                        break;
                     case CURRENCY_EVENT[query.data]:
                         this.inputEventAwait = {
-                            event:CURRENCY_EVENT.SET_CURRENCY_VALUE,
+                            event:CURRENCY_EVENT[query.data],
                             data: dataParam
                         }
                         UIManager.pleaseInputData(chatId)
@@ -103,6 +114,12 @@ class BotController {
                 case CURRENCY_EVENT.SET_CURRENCY_VALUE:
                     this.setCurrencyValue(chatId, text, this.inputEventAwait)
                     break;
+                case CURRENCY_EVENT.SET_CURRENCY_RESERVE:
+                    this.setCurrencyReserves(chatId, text, this.inputEventAwait)
+                    break;
+                case CURRENCY_EVENT.SET_CURRENCY_MIN_SUM:
+                    this.setCurrencyMinSum(chatId, text, this.inputEventAwait)
+                    break;
                 default:
                     console.log('WRONG inputEventAwait PARAMS:', this.inputEventAwait)
             }
@@ -118,12 +135,10 @@ class BotController {
         .then(jsonData => {
             return jsonData;
         })
-        UIManager.currencylistUI(chatId, currencyList)
-
+        UIManager.currencylistUI(chatId, currencyList);
     }
 
     async setCurrencyValue(chatId, value, eventData) {
-        console.log(value, eventData)
         const currencyResponce = await fetch(`${SERVER_URL}/currencyValue`, {
             method: "POST",
             headers: {
@@ -139,6 +154,38 @@ class BotController {
         this.bot.sendMessage(chatId, JSON.stringify(currencyResponce))
     }
 
+    async setCurrencyReserves(chatId, value, eventData) {
+        const currencyResponce = await fetch(`${SERVER_URL}/currencyReserves`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({currenyName: eventData.data, value})
+        }).then(response => {
+            return response.json();
+        }).then(responseData => {
+            return responseData;
+        })
+        this.inputEventAwait = null;
+        this.bot.sendMessage(chatId, JSON.stringify(currencyResponce))
+    }
+
+    async setCurrencyMinSum(chatId, value, eventData) {
+        const currencyResponce = await fetch(`${SERVER_URL}/minExchange`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({currenyName: eventData.data, value})
+        }).then(response => {
+            return response.json();
+        }).then(responseData => {
+            return responseData;
+        })
+        console.log(currencyResponce)
+        this.inputEventAwait = null;
+        this.bot.sendMessage(chatId, JSON.stringify(currencyResponce))
+    }
 
     async notifyUsers(text) {
         this.getUsersList().then(usersList => {
