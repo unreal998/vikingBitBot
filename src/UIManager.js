@@ -50,11 +50,11 @@ class UIManager {
     }
 
     userMainMenu(chatId, data) {
-        this.bot.sendMessage(chatId, `Привіт ${data.first_name || data.last_name}  \nГоловне меню:`, this.userMainMenuUI);
+        this.bot.sendMessage(chatId, `Привіт ${data.firstName || data.lastName}  \nГоловне меню:`, this.userMainMenuUI);
     }
 
     adminMainMenu(chatId, data) {
-        this.bot.sendMessage(chatId, `Привіт ${data.first_name || data.last_name}  \nГоловне меню:`, this.adminMainMenuUI);
+        this.bot.sendMessage(chatId, `Привіт ${data.firstName || data.lastName}  \nГоловне меню:`, this.adminMainMenuUI);
     }
 
     botInfo(chatId) {
@@ -65,23 +65,18 @@ class UIManager {
         this.bot.sendMessage(chatId, `Список валют`, this.currencylistUIButtons(currencyList));
     }
 
+    currencyValuelistUI(chatId, currencyList) {
+        let currencyString = "";
+        for (const currency in currencyList) {
+            const el = currencyList[currency];
+            currencyString += `${currency}: ${el.value} \n`
+        }
+        this.bot.sendMessage(chatId, `Курс валют \n` + currencyString);
+    }
+
     pleaseInputData(chatId) {
         this.bot.sendMessage(chatId, `Введіть значення`);
     }
-
-    
-
-    // setCurrencyValueUI(chatId) {
-    //     this.bot.sendMessage(chatId, `Оберіть валюту`, this.currencylistUI);
-    // }
-
-    // setCurrencyMinSumUI(chatId) {
-    //     this.bot.sendMessage(chatId, `Оберіть валюту`, this.currencylistUI);
-    // }
-
-    // setCurrencyReserveUI(chatId) {
-    //     this.bot.sendMessage(chatId, `Оберіть валюту`, this.currencylistUI);
-    // }
 
     siteLink(chatId) {
         this.bot.sendMessage(chatId, `Посилання на сайт: 👇 \nhttps:VikingBitExchange.com`);

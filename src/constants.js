@@ -40,6 +40,13 @@ const MAIN_MENU_UI_CONTROLS_EVENT = {
     GET_CURRENCY_LIST: 'GET_CURRENCY_LIST'
 }
 
+const USER_ROLES = {
+    ADMIN: 'admin',
+    WORKER: 'worker',
+    VBIVER: 'vbiver',
+    REJECTED: 'rejected'
+}
+
 const CURRENCY_NAMES = {
     USDT: 'USDT',
     USDC: 'USDC',
@@ -58,5 +65,6 @@ export {
     SERVER_URL,
     MAIN_MENU_UI_CONTROLS_EVENT,
     CURRENCY_EVENT,
-    CURRENCY_NAMES
+    CURRENCY_NAMES,
+    USER_ROLES
 }

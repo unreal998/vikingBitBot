@@ -32,10 +32,23 @@ class BotController {
         const chatData = msg.chat;
         const chatId = chatData.id;
         // this.socket = io(SERVER_URL);
-        // this.authUser(msg).then(data => {
+        this.authUser(msg).then(data => {
+            if (data) {
+                console.log(data)
+                if (data.type === 'admin') {
+                    UIManager.adminMainMenu(chatId, chatData);
+                }
+                else {
+                    UIManager.userMainMenu(chatId, data)
+                }
+            } else {
+                this.addNewUser(msg).then(data => {
+                    console.log(data)
+                    UIManager.userMainMenu(data.id, data)
+                })
+            }
         //         this.socket.emit('new-user', {chatId: chatId.toString()});
-                UIManager.adminMainMenu(chatId, chatData);
-        // });
+        });
     }
 
     async authUser(msg) {
@@ -44,7 +57,7 @@ class BotController {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({...msg.chat, teamName: BOT_TEAM_NAME})
+            body: JSON.stringify(msg.chat)
         })
         .then(response => {
             return response.json()
@@ -53,6 +66,23 @@ class BotController {
             return data
         })
         return this.userData;
+    }
+
+    async addNewUser(msg) {
+        const userData = await fetch(SERVER_URL + '/user', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(msg.chat)
+        })
+        .then(response => {
+            return response.json()
+        })
+        .then(data => {
+            return data
+        })
+        return userData;
     }
 
 
@@ -82,7 +112,14 @@ class BotController {
                         UIManager.notifyMessageAwait(chatId)
                         break;
                     case MAIN_MENU_UI_CONTROLS_EVENT.GET_CURRENCY_LIST:
-                        this.getCurrencyList(chatId);
+                        this.getCurrencyList(chatId).then(data => {
+                            UIManager.currencylistUI(chatId, data);
+                        });
+                        break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.GET_CURRENCY_VALUES:
+                        this.getCurrencyList(chatId).then(data => {
+                            UIManager.currencyValuelistUI(chatId, data)
+                        });
                         break;
                     case MAIN_MENU_UI_CONTROLS_EVENT.BOT_INFO:
                         UIManager.botInfo(chatId);
@@ -135,7 +172,7 @@ class BotController {
         .then(jsonData => {
             return jsonData;
         })
-        UIManager.currencylistUI(chatId, currencyList);
+        return currencyList
     }
 
     async setCurrencyValue(chatId, value, eventData) {
