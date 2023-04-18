@@ -1,4 +1,4 @@
-import {EMOJI_NAMES, MAIN_MENU_UI_CONTROLS_EVENT, CURRENCY_EVENT, CURRENCY_NAMES} from './constants.js';
+import {EMOJI_NAMES, MAIN_MENU_UI_CONTROLS_EVENT, CURRENCY_EVENT, CURRENCY_NAMES, ORDERS_EVENTS} from './constants.js';
 import { getEmoji } from './utils.js';
 class UIManager {
     constructor() {
@@ -17,6 +17,7 @@ class UIManager {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: `${getEmoji(EMOJI_NAMES.RESERVED)} Cписок валют`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_CURRENCY_LIST }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.RESERVED)} Відкриті оредри`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_PENDING_ORDERS_DATA }],
                     [{ text: `${getEmoji(EMOJI_NAMES.LIST)} Переглянути останні транзакції`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CHAT }],
                     [{ text: `${getEmoji(EMOJI_NAMES.DETAIL)} Переглянути транзакцію`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CHAT }],
                     [{ text: `${getEmoji(EMOJI_NAMES.NOTIFICATION)} Зробити оголошення`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.NOTIFICATION }],
@@ -38,6 +39,26 @@ class UIManager {
                 ]
             )
         };
+        return {
+            reply_markup: {
+                inline_keyboard: markupArray
+            }
+        }
+    }
+
+    pendingOrderslistUIButtons(ordersList) {
+        const markupArray = [];
+        console.log(ordersList)
+        ordersList.forEach(element => {
+            console.log(element)
+            markupArray.push(
+                [
+                    { text: `${getEmoji(EMOJI_NAMES.LINK)} ${element.transactionID}: ${element.currency.split('/')[0]} ${element.fromSum} ${element.currency.split('/')[1]} ${element.toSum}`, callback_data: `${ORDERS_EVENTS.ORDER_INFO}${element.transactionID.toString()}`},
+                    { text: `${getEmoji(EMOJI_NAMES.YES)} Підтвердити:`, callback_data: `${ORDERS_EVENTS.ORDER_REJECT}${element.transactionID.toString()}`},
+                    { text: `${getEmoji(EMOJI_NAMES.NO)} Відхилити`, callback_data: `${ORDERS_EVENTS.ORDER_CONFIRM}${element.transactionID.toString()}`}
+                ]
+            )
+        });
         return {
             reply_markup: {
                 inline_keyboard: markupArray
@@ -86,8 +107,8 @@ class UIManager {
         this.bot.sendMessage(chatId, `Очікуйте відповіді від представика`);
     }
 
-    chatWithManager(chatId) {
-        this.bot.sendMessage(chatId, `Очікуйте відповіді від представика`);
+    pendingOrderslist(chatId, ordersList) {
+        this.bot.sendMessage(chatId, `Список відкритих ордерів`, this.pendingOrderslistUIButtons(ordersList));
     }
 
     notifyMessageAwait(chatId) {

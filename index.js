@@ -36,7 +36,7 @@ class BotController {
             if (data) {
                 console.log(data)
                 if (data.type === 'admin') {
-                    UIManager.adminMainMenu(chatId, chatData);
+                    UIManager.adminMainMenu(chatId, data);
                 }
                 else {
                     UIManager.userMainMenu(chatId, data)
@@ -60,15 +60,18 @@ class BotController {
             body: JSON.stringify(msg.chat)
         })
         .then(response => {
+            console.log(response)
             return response.json()
         })
         .then(data => {
+            console.log(data)
             return data
         })
         return this.userData;
     }
 
     async addNewUser(msg) {
+        console.log(msg)
         const userData = await fetch(SERVER_URL + '/user', {
             method: 'PUT',
             headers: {
@@ -124,6 +127,11 @@ class BotController {
                     case MAIN_MENU_UI_CONTROLS_EVENT.BOT_INFO:
                         UIManager.botInfo(chatId);
                         break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.GET_PENDING_ORDERS_DATA:
+                        this.getPendingOrders(chatId).then(data => {
+                            UIManager.pendingOrderslist(chatId, data);
+                        });
+                        break;
                     case CURRENCY_EVENT[query.data]:
                         this.inputEventAwait = {
                             event:CURRENCY_EVENT[query.data],
@@ -162,6 +170,24 @@ class BotController {
             }
 
         }
+    }
+
+    async getPendingOrders(chatId) {
+        const currencyList = await fetch(`${SERVER_URL}/orders`)
+        .then(response => {
+            return response.json();
+        })
+        .then(jsonData => {
+            const pendingOrdersArray = [];
+            for (const key in jsonData) {
+                if (jsonData[key].status === 'pending') {
+                    const element = jsonData[key];   
+                    pendingOrdersArray.push(element);
+                }
+            }
+            return pendingOrdersArray;
+        })
+        return currencyList
     }
 
     async getCurrencyList(chatId) {
