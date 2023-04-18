@@ -54,8 +54,8 @@ class UIManager {
             markupArray.push(
                 [
                     { text: `${getEmoji(EMOJI_NAMES.LINK)} ${element.transactionID}: ${element.currency.split('/')[0]} ${element.fromSum} ${element.currency.split('/')[1]} ${element.toSum}`, callback_data: `${ORDERS_EVENTS.ORDER_INFO}${element.transactionID.toString()}`},
-                    { text: `${getEmoji(EMOJI_NAMES.YES)} Підтвердити:`, callback_data: `${ORDERS_EVENTS.ORDER_REJECT}${element.transactionID.toString()}`},
-                    { text: `${getEmoji(EMOJI_NAMES.NO)} Відхилити`, callback_data: `${ORDERS_EVENTS.ORDER_CONFIRM}${element.transactionID.toString()}`}
+                    { text: `${getEmoji(EMOJI_NAMES.YES)} Підтвердити:`, callback_data: `${ORDERS_EVENTS.ORDER_CONFIRM}${element.transactionID.toString()}`},
+                    { text: `${getEmoji(EMOJI_NAMES.NO)} Відхилити`, callback_data: `${ORDERS_EVENTS.ORDER_REJECT}${element.transactionID.toString()}`}
                 ]
             )
         });
@@ -109,6 +109,14 @@ class UIManager {
 
     pendingOrderslist(chatId, ordersList) {
         this.bot.sendMessage(chatId, `Список відкритих ордерів`, this.pendingOrderslistUIButtons(ordersList));
+    }
+
+    orderRjected(chatId) {
+        this.bot.sendMessage(chatId, `Ордер відхилено`);
+    }
+
+    orderConfirm(chatId) {
+        this.bot.sendMessage(chatId, `Ордер підтвердженно`);
     }
 
     notifyMessageAwait(chatId) {

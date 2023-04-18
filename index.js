@@ -4,7 +4,8 @@ import {
     MAIN_MENU_UI_CONTROLS_EVENT,
     SERVER_URL, CURRENCY_NAMES,
     TOKEN,
-    CURRENCY_EVENT
+    CURRENCY_EVENT,
+    ORDERS_EVENTS
 } from './src/constants.js';
 import UIManager from './src/UIManager.js';
 import {io} from "socket.io-client";
@@ -108,6 +109,18 @@ class BotController {
                     let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_MIN_SUM)(.*)/gm)];
                     query.data = separateChatId[0][1];
                     dataParam = separateChatId[0][2];
+                } else if (query.data.includes(ORDERS_EVENTS.ORDER_CONFIRM)) {
+                    let separateChatId = [...query.data.matchAll(/(ORDER_CONFIRM)(.*)/gm)];
+                    query.data = separateChatId[0][1];
+                    dataParam = separateChatId[0][2];
+                } else if (query.data.includes(ORDERS_EVENTS.ORDER_INFO)) {
+                    let separateChatId = [...query.data.matchAll(/(ORDER_INFO)(.*)/gm)];
+                    query.data = separateChatId[0][1];
+                    dataParam = separateChatId[0][2];
+                } else if (query.data.includes(ORDERS_EVENTS.ORDER_REJECT)) {
+                    let separateChatId = [...query.data.matchAll(/(ORDER_REJECT)(.*)/gm)];
+                    query.data = separateChatId[0][1];
+                    dataParam = separateChatId[0][2];
                 }
                 switch (query.data) {
                     case MAIN_MENU_UI_CONTROLS_EVENT.NOTIFICATION:
@@ -138,6 +151,24 @@ class BotController {
                             data: dataParam
                         }
                         UIManager.pleaseInputData(chatId)
+                        break;
+                    case ORDERS_EVENTS.ORDER_CONFIRM:
+                        this.updateOrderStatus(dataParam, 'confirm').then(() => {
+                            UIManager.orderConfirm(chatId);
+                            this.getPendingOrders(chatId).then(data => {
+                                UIManager.pendingOrderslist(chatId, data);
+                            });
+                        });
+                        break;
+                    case ORDERS_EVENTS.ORDER_INFO:
+                        break;
+                    case ORDERS_EVENTS.ORDER_REJECT:
+                        this.updateOrderStatus(dataParam, 'reject').then(() => {
+                            UIManager.orderRjected(chatId);
+                            this.getPendingOrders(chatId).then(data => {
+                                UIManager.pendingOrderslist(chatId, data);
+                            });
+                        });
                         break;
                     default:
                         this.bot.sendMessage(chatId, "Выберите корректную кнопку");
@@ -188,6 +219,19 @@ class BotController {
             return pendingOrdersArray;
         })
         return currencyList
+    }
+
+    async updateOrderStatus(transactionID, status) {
+        await fetch(`${SERVER_URL}/orders`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({transactionID, status})
+        })
+        .catch(err => {
+            console.log(err);
+        })
     }
 
     async getCurrencyList(chatId) {
