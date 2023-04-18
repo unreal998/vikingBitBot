@@ -66,6 +66,19 @@ class UIManager {
         }
     }
 
+    orderDataUIButtons(transactionID) {
+        return {
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        { text: `${getEmoji(EMOJI_NAMES.YES)} Підтвердити`, callback_data: `${ORDERS_EVENTS.ORDER_CONFIRM}${transactionID.toString()}` },
+                        { text: `${getEmoji(EMOJI_NAMES.NO)} Відхилити`, callback_data: `${ORDERS_EVENTS.ORDER_REJECT}${transactionID.toString()}` }
+                    ],
+                ]
+            }
+        }
+    }
+
     init(bot) {
         this.bot = bot;
     }
@@ -109,6 +122,17 @@ class UIManager {
 
     pendingOrderslist(chatId, ordersList) {
         this.bot.sendMessage(chatId, `Список відкритих ордерів`, this.pendingOrderslistUIButtons(ordersList));
+    }
+
+    orderInfoUI(chatId, data) {
+        console.log(data)
+        const text = `Дані ордеру:
+id: ${data.transactionID}
+Дата: ${new Date(data.timestamp).toString()}
+Переказав: ${data.fromSum} ${data.currency.split('/')[0]}
+Отримає: ${data.toSum} ${data.currency.split('/')[1]}
+        `;
+        this.bot.sendMessage(chatId,text, this.orderDataUIButtons(data.transactionID));
     }
 
     orderRjected(chatId) {

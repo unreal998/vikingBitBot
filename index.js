@@ -161,6 +161,9 @@ class BotController {
                         });
                         break;
                     case ORDERS_EVENTS.ORDER_INFO:
+                        this.getOrderData(dataParam).then((data) => {
+                            UIManager.orderInfoUI(chatId, data);
+                        });
                         break;
                     case ORDERS_EVENTS.ORDER_REJECT:
                         this.updateOrderStatus(dataParam, 'reject').then(() => {
@@ -218,7 +221,20 @@ class BotController {
             }
             return pendingOrdersArray;
         })
-        return currencyList
+        return currencyList;
+    }
+
+    async getOrderData(transactionID) {
+        const orderData = await fetch(`${SERVER_URL}/orders?id=${transactionID}`)
+        .then(response => {
+            return response.json();
+        })
+        .then(jsonData => {
+            console.log(jsonData)
+            return jsonData;
+        })
+        console.log(orderData)
+        return orderData;
     }
 
     async updateOrderStatus(transactionID, status) {
