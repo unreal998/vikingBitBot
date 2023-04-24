@@ -204,6 +204,11 @@ class BotController {
             }
 
         }
+        if (this.notificationMessageAwait) {
+            this.notificationMessageAwait = false;
+            this.notifyUsers(text);
+            return true;
+        }
     }
 
     async getPendingOrders(chatId) {
@@ -319,6 +324,14 @@ class BotController {
         })
     }
 
+    async getUsersList() {
+        return await fetch(SERVER_URL + `/usersList`)
+            .then(response => {
+                return response.json()
+            }).then(data => {
+                return data;
+            });
+    }
 
     clean() {
         this.bot.removeAllListeners();
