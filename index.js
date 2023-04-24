@@ -5,10 +5,11 @@ import {
     SERVER_URL, CURRENCY_NAMES,
     TOKEN,
     CURRENCY_EVENT,
-    ORDERS_EVENTS
+    ORDERS_EVENTS, EMOJI_NAMES
 } from './src/constants.js';
 import UIManager from './src/UIManager.js';
 import {io} from "socket.io-client";
+import {getEmoji} from "./src/utils.js";
 
 class BotController {
     constructor(token) {
@@ -319,7 +320,7 @@ class BotController {
         this.getUsersList().then(usersList => {
             for (const key in usersList) {
                 const user = usersList[key];
-                this.bot.sendMessage(user.id, text);
+                this.bot.sendMessage(user.id, `${getEmoji(EMOJI_NAMES.NOTIFICATION)} ${text}`);
             }
         })
     }
