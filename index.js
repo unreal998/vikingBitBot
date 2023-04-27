@@ -97,8 +97,8 @@ class BotController {
             const chatId = query.message.chat.id;
             if (typeof (query.data) === "string") {
                 let dataParam = null;
-                if (query.data.includes(CURRENCY_EVENT.SET_CURRENCY_VALUE)) {
-                    let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_VALUE)(.*)/gm)];
+                if (query.data.includes(CURRENCY_EVENT.SET_CURRENCY_BUY)) {
+                    let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_BUY)(.*)/gm)];
                     query.data = separateChatId[0][1];
                     dataParam = separateChatId[0][2];
                 } else if (query.data.includes(CURRENCY_EVENT.SET_CURRENCY_RESERVE)) {
@@ -190,8 +190,11 @@ class BotController {
         }
         if (this.inputEventAwait) {
             switch (this.inputEventAwait.event) {
-                case CURRENCY_EVENT.SET_CURRENCY_VALUE:
-                    this.setCurrencyValue(chatId, text, this.inputEventAwait)
+                case CURRENCY_EVENT.SET_CURRENCY_BUY:
+                    this.setCurrencyBuy(chatId, text, this.inputEventAwait)
+                    break;
+                case CURRENCY_EVENT.SET_CURRENCY_SELL:
+                    this.setCurrencySell(chatId, text, this.inputEventAwait)
                     break;
                 case CURRENCY_EVENT.SET_CURRENCY_RESERVE:
                     this.setCurrencyReserves(chatId, text, this.inputEventAwait)
@@ -261,8 +264,24 @@ class BotController {
         return currencyList
     }
 
-    async setCurrencyValue(chatId, value, eventData) {
-        const currencyResponce = await fetch(`${SERVER_URL}/currencyValue`, {
+    async setCurrencyBuy(chatId, value, eventData) {
+        const currencyResponce = await fetch(`${SERVER_URL}/currencyBuy`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({currenyName: eventData.data, value})
+        }).then(response => {
+            return response.json();
+        }).then(responseData => {
+            return responseData;
+        })
+        this.inputEventAwait = null;
+        this.bot.sendMessage(chatId, JSON.stringify(currencyResponce))
+    }
+
+    async setCurrencySell(chatId, value, eventData) {
+        const currencyResponce = await fetch(`${SERVER_URL}/currencySell`, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json'

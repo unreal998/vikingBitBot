@@ -33,7 +33,8 @@ class UIManager {
             const el = currencyList[key];
             markupArray.push(
                 [
-                    { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${key}: ${el.value}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_VALUE}${CURRENCY_NAMES[key.toUpperCase()]}`},
+                    { text: `${getEmoji(EMOJI_NAMES.MONEY)} BUY ${key}: ${el.buy}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}`},
+                    { text: `${getEmoji(EMOJI_NAMES.MONEY)} SELL ${key}: ${el.sell}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_SELL}${CURRENCY_NAMES[key.toUpperCase()]}`},
                     { text: `${getEmoji(EMOJI_NAMES.DOWN)} Мін. сума: ${el.minExchange}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_MIN_SUM}${CURRENCY_NAMES[key.toUpperCase()]}`},
                     { text: `${getEmoji(EMOJI_NAMES.RESERVED)} Резерв ${el.reserve}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_RESERVE}${CURRENCY_NAMES[key.toUpperCase()]}`}
                 ]
@@ -103,7 +104,7 @@ class UIManager {
         let currencyString = "";
         for (const currency in currencyList) {
             const el = currencyList[currency];
-            currencyString += `${currency}: ${el.value} \n`
+            currencyString += `${currency}: ${el.buy} \n / ${el.sell}`
         }
         this.bot.sendMessage(chatId, `Курс валют \n` + currencyString);
     }
