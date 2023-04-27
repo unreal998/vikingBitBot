@@ -102,6 +102,11 @@ class BotController {
                     let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_BUY)(.*)/gm)];
                     query.data = separateChatId[0][1];
                     dataParam = separateChatId[0][2];
+                }
+                else if (query.data.includes(CURRENCY_EVENT.SET_CURRENCY_SELL)) {
+                    let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_SELL)(.*)/gm)];
+                    query.data = separateChatId[0][1];
+                    dataParam = separateChatId[0][2];
                 } else if (query.data.includes(CURRENCY_EVENT.SET_CURRENCY_RESERVE)) {
                     let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_RESERVE)(.*)/gm)];
                     query.data = separateChatId[0][1];
