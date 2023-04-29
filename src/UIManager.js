@@ -54,7 +54,7 @@ class UIManager {
             console.log(element)
             markupArray.push(
                 [
-                    { text: `${getEmoji(EMOJI_NAMES.LINK)} ${element.transactionID}: ${element.currency.split('/')[0]} ${element.fromSum} ${element.currency.split('/')[1]} ${element.toSum}`, callback_data: `${ORDERS_EVENTS.ORDER_INFO}${element.transactionID.toString()}`},
+                    { text: `${getEmoji(EMOJI_NAMES.LINK)} ${element.transactionID}: ${element.fromSum.currency} ${element.fromSum.value} ${element.toSum.currency} ${element.toSum.value}`, callback_data: `${ORDERS_EVENTS.ORDER_INFO}${element.transactionID.toString()}`},
                     { text: `${getEmoji(EMOJI_NAMES.YES)} Підтвердити:`, callback_data: `${ORDERS_EVENTS.ORDER_CONFIRM}${element.transactionID.toString()}`},
                     { text: `${getEmoji(EMOJI_NAMES.NO)} Відхилити`, callback_data: `${ORDERS_EVENTS.ORDER_REJECT}${element.transactionID.toString()}`}
                 ]
@@ -127,13 +127,15 @@ class UIManager {
 
     orderInfoUI(chatId, data) {
         console.log(data)
-        const text = `Дані ордеру:
+        let text = `Дані ордеру:
 id: ${data.transactionID}
 Дата: ${new Date(data.timestamp).toString()}
-Переказав: ${data.fromSum} ${data.currency.split('/')[0]}
-Отримає: ${data.toSum} ${data.currency.split('/')[1]}
-        `;
-        this.bot.sendMessage(chatId,text, this.orderDataUIButtons(data.transactionID));
+Переказав: ${data.fromSum.value} ${data.fromSum.currency}
+Отримає: ${data.toSum.value} ${data.toSum.currency}
+Рахунок отримувача: ${data.wallet}
+`;
+        if (data.network) { text += `Мережа: ${data.network}` }
+        this.bot.sendMessage(chatId, text, this.orderDataUIButtons(data.transactionID));
     }
 
     orderRjected(chatId) {
