@@ -1,4 +1,4 @@
-import {EMOJI_NAMES, MAIN_MENU_UI_CONTROLS_EVENT, CURRENCY_EVENT, CURRENCY_NAMES, ORDERS_EVENTS} from './constants.js';
+import {EMOJI_NAMES, MAIN_MENU_UI_CONTROLS_EVENT, CURRENCY_EVENT, CURRENCY_NAMES, ORDERS_EVENTS, EMPTY_EVENT, NETWORK_TYPES} from './constants.js';
 import { getEmoji } from './utils.js';
 class UIManager {
     constructor() {
@@ -6,10 +6,19 @@ class UIManager {
         this.userMainMenuUI = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: `${getEmoji(EMOJI_NAMES.CREATE_LINK)} Замовити обмін`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CREATE_EXCHANGE_REQUEST }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.CREATE_LINK)} Замовити обмін`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CREATE_NEW_ORDER }],
                     [{ text: `${getEmoji(EMOJI_NAMES.MY_LINKS)} Зв'язок з представником`, url: "https://t.me/artem_hontar" }],
                     [{ text: `${getEmoji(EMOJI_NAMES.CHANGE_PRICE)} Актуальний курс`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_CURRENCY_VALUES }],
                     [{ text: `${getEmoji(EMOJI_NAMES.SETTINGS)} Про бот`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.BOT_INFO }],
+                ]
+            }
+        }
+        this.exchangeNetworksList = {
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: `${getEmoji(EMOJI_NAMES.LINK)} ${NETWORK_TYPES.BEP_20}`, callback_data: `${ORDERS_EVENTS.SELECT_NETWORK}${NETWORK_TYPES.BEP_20}` }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.LINK)} ${NETWORK_TYPES.ERC_20}`, callback_data: `${ORDERS_EVENTS.SELECT_NETWORK}${NETWORK_TYPES.ERC_20}` }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.LINK)} ${NETWORK_TYPES.ERC_2}`, callback_data: `${ORDERS_EVENTS.SELECT_NETWORK}${NETWORK_TYPES.ERC_2}` }],
                 ]
             }
         }
@@ -39,6 +48,47 @@ class UIManager {
                     { text: `${getEmoji(EMOJI_NAMES.RESERVED)} Резерв ${el.reserve}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_RESERVE}${CURRENCY_NAMES[key.toUpperCase()]}`}
                 ]
             )
+        };
+        return {
+            reply_markup: {
+                inline_keyboard: markupArray
+            }
+        }
+    }
+
+    currencySelectorUIButtons(currencyList) {
+        const markupArray = [];
+        for (const key in currencyList) {
+            const el = currencyList[key];
+            markupArray.push(
+                [
+                    { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${key}`, callback_data: `${ORDERS_EVENTS.SET_CURRENCY_FOR_EXCHANGE}${CURRENCY_NAMES[key.toUpperCase()]}`},
+                ]
+            )
+        };
+        return {
+            reply_markup: {
+                inline_keyboard: markupArray
+            }
+        }
+    }
+
+    currencyExchangeSelectorUIButtons(currencyList, selectedCurrency) {
+        const markupArray = [];
+        for (const key in currencyList) {
+            const el = currencyList[key];
+            if (selectedCurrency.name !== el.name) {
+                markupArray.push(
+                    [
+                        { text: `${getEmoji(EMOJI_NAMES.MONEY)} 1 ${selectedCurrency.name} => ${(+selectedCurrency.sell / (+el.sell)).toFixed(6)} ${key}`, callback_data: `${ORDERS_EVENTS.SET_CURRENCY_FOR_EXCHANGE}${CURRENCY_NAMES[key.toUpperCase()]}`},
+                    ],
+                    [
+                        { text: `${getEmoji(EMOJI_NAMES.DOWN)} Мін. сума: ${el.minExchange}`, callback_data: EMPTY_EVENT},
+                        { text: `${getEmoji(EMOJI_NAMES.RESERVED)} Резерв ${el.reserve}`, callback_data: EMPTY_EVENT}
+                    ]
+                
+                )
+            }
         };
         return {
             reply_markup: {
@@ -125,17 +175,21 @@ class UIManager {
         this.bot.sendMessage(chatId, `Список відкритих ордерів`, this.pendingOrderslistUIButtons(ordersList));
     }
 
-    orderInfoUI(chatId, data) {
-        console.log(data)
+    orderInfoUI(chatId, data, withButtons = false) {
         let text = `Дані ордеру:
 id: ${data.transactionID}
 Дата: ${new Date(data.timestamp).toString()}
+Статус: ${data.status}
 Переказав: ${data.fromSum.value} ${data.fromSum.currency}
 Отримає: ${data.toSum.value} ${data.toSum.currency}
 Рахунок отримувача: ${data.wallet}
 `;
         if (data.network) { text += `Мережа: ${data.network}` }
-        this.bot.sendMessage(chatId, text, this.orderDataUIButtons(data.transactionID));
+        if (withButtons) {
+            this.bot.sendMessage(chatId, text, this.orderDataUIButtons(data.transactionID))
+        } else {
+            this.bot.sendMessage(chatId, text);
+        }
     }
 
     orderRjected(chatId) {
@@ -149,6 +203,35 @@ id: ${data.transactionID}
     notifyMessageAwait(chatId) {
         this.bot.sendMessage(chatId, `Зробіть оголошення`);
     }
+
+    createNewOrderText(chatId, data) {
+        this.bot.sendMessage(chatId, `Оберіть валюту яку бажаєте обміняти`, this.currencySelectorUIButtons(data));
+    }
+
+    selectCurrencyForExchangeText(chatId, data, selectedCurrency) {
+        this.bot.sendMessage(chatId, `Оберіть валюту яку бажаєте отримати`, this.currencyExchangeSelectorUIButtons(data, selectedCurrency));
+    }
+
+    inputCurrencyAmountAwait(chatId) {
+        this.bot.sendMessage(chatId, `Введіть сумму яку бажаєте обміняти`); 
+    }
+
+    inputCurrencyAmountError(chatId) {
+        this.bot.sendMessage(chatId, `Вы ввели не число!`); 
+    }
+
+    inputExchangeNetwork(chatId) {
+        this.bot.sendMessage(chatId, `Оберіть мережу для переказу`, this.exchangeNetworksList); 
+    }
+
+    inputWaletAwait(chatId, selectedCurrencyType) {
+        if (selectedCurrencyType === 'crypto') {
+            this.bot.sendMessage(chatId, `Введіть номер гаманця для зарахування`);
+        } else {
+            this.bot.sendMessage(chatId, `Введіть номер карти для зарахування`);
+        }
+    }
+
 }
 
 export default new UIManager()

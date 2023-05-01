@@ -5,7 +5,7 @@ import {
     SERVER_URL, CURRENCY_NAMES,
     TOKEN,
     CURRENCY_EVENT,
-    ORDERS_EVENTS, EMOJI_NAMES
+    ORDERS_EVENTS, EMOJI_NAMES, EMPTY_EVENT
 } from './src/constants.js';
 import UIManager from './src/UIManager.js';
 import {io} from "socket.io-client";
@@ -20,6 +20,18 @@ class BotController {
         this.notificationMessageAwait = false;
         this.inputEventAwait = '';
         this.onMessageHandler = this.onMessageHandler.bind(this);
+        this.orderData = {
+            selectedCurrencyForExchange: [],
+            wallet: '',
+            network: '',
+            transactionID: '',
+            status: '',
+            network: '',
+            timestamp: '',
+            coupon: '',
+            login: ''
+        }
+
     }
 
     init() {
@@ -90,6 +102,24 @@ class BotController {
         return userData;
     }
 
+    async createNewOrder(userData) {
+        this.orderData.status = 'pending';
+        this.orderData.timestamp = Date.now();
+        this.orderData.transactionID = Math.floor(Math.random() * 100000) + 1;
+        this.orderData.login = userData.username;
+        delete this.orderData.selectedCurrencyForExchange;
+        await fetch(SERVER_URL + '/orders', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(this.orderData)
+        })
+        .then(response => {
+            UIManager.orderInfoUI(userData.id, this.orderData)
+        })
+    }
+
 
     addEventListeners() {
         this.bot.on('message', this.onMessageHandler);
@@ -127,11 +157,24 @@ class BotController {
                     let separateChatId = [...query.data.matchAll(/(ORDER_REJECT)(.*)/gm)];
                     query.data = separateChatId[0][1];
                     dataParam = separateChatId[0][2];
+                } else if (query.data.includes(ORDERS_EVENTS.SET_CURRENCY_FOR_EXCHANGE)) {
+                    let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_FOR_EXCHANGE)(.*)/gm)];
+                    query.data = separateChatId[0][1];
+                    dataParam = separateChatId[0][2];
+                } else if (query.data.includes(ORDERS_EVENTS.SELECT_NETWORK)) {
+                    let separateChatId = [...query.data.matchAll(/(SELECT_NETWORK)(.*)/gm)];
+                    query.data = separateChatId[0][1];
+                    dataParam = separateChatId[0][2]; 
                 }
                 switch (query.data) {
                     case MAIN_MENU_UI_CONTROLS_EVENT.NOTIFICATION:
                         this.notificationMessageAwait = true;
-                        UIManager.notifyMessageAwait(chatId)
+                        UIManager.notifyMessageAwait(chatId);
+                        break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.CREATE_NEW_ORDER:
+                        this.getCurrencyList(chatId).then(data => {
+                            UIManager.createNewOrderText(chatId, data)
+                        });
                         break;
                     case MAIN_MENU_UI_CONTROLS_EVENT.GET_CURRENCY_LIST:
                         this.getCurrencyList(chatId).then(data => {
@@ -151,6 +194,36 @@ class BotController {
                             UIManager.pendingOrderslist(chatId, data);
                         });
                         break;
+                    case ORDERS_EVENTS.SELECT_NETWORK:
+                        this.orderData.network = dataParam;
+                        this.inputEventAwait = {
+                            event:ORDERS_EVENTS.ORDER_INPUT_WALLET_AWAIT,
+                            data: null
+                        };
+                        UIManager.inputWaletAwait(chatId, this.orderData.selectedCurrencyForExchange[1].type)
+                        break;
+                    case ORDERS_EVENTS.SET_CURRENCY_FOR_EXCHANGE: 
+                        console.log(this.orderData.selectedCurrencyForExchange.length)
+                        if (this.orderData.selectedCurrencyForExchange.length < 1) {
+                            this.getCurrencyList(chatId).then(data => {
+                                const selectedCurrency = data[dataParam];
+                                this.orderData.selectedCurrencyForExchange.push(selectedCurrency);
+                                console.log(this.orderData);
+                                UIManager.selectCurrencyForExchangeText(chatId, data, selectedCurrency)
+                            });
+                        }
+                        else {
+                            this.getCurrencyList(chatId).then(data => {
+                                const selectedCurrency = data[dataParam];
+                                this.orderData.selectedCurrencyForExchange.push(selectedCurrency);
+                                this.inputEventAwait = {
+                                    event:ORDERS_EVENTS.ORDER_INPUT_AMOUNT_AWAIT,
+                                    data: null
+                                };
+                                UIManager.inputCurrencyAmountAwait(chatId);
+                            })
+                        }
+                        break;
                     case CURRENCY_EVENT[query.data]:
                         this.inputEventAwait = {
                             event:CURRENCY_EVENT[query.data],
@@ -168,7 +241,7 @@ class BotController {
                         break;
                     case ORDERS_EVENTS.ORDER_INFO:
                         this.getOrderData(dataParam).then((data) => {
-                            UIManager.orderInfoUI(chatId, data);
+                            UIManager.orderInfoUI(chatId, data, true);
                         });
                         break;
                     case ORDERS_EVENTS.ORDER_REJECT:
@@ -178,6 +251,8 @@ class BotController {
                                 UIManager.pendingOrderslist(chatId, data);
                             });
                         });
+                        break;
+                    case EMPTY_EVENT:
                         break;
                     default:
                         this.bot.sendMessage(chatId, "Выберите корректную кнопку");
@@ -207,6 +282,39 @@ class BotController {
                     break;
                 case CURRENCY_EVENT.SET_CURRENCY_MIN_SUM:
                     this.setCurrencyMinSum(chatId, text, this.inputEventAwait)
+                    break;
+                case ORDERS_EVENTS.ORDER_INPUT_WALLET_AWAIT:
+                    this.orderData.wallet = text;
+                    this.createNewOrder(msg.chat);
+                    break;
+                case ORDERS_EVENTS.ORDER_INPUT_AMOUNT_AWAIT:
+                    if (!Number.isNaN((+text))) {
+                        this.orderData.fromSum = {
+                            currency: this.orderData.selectedCurrencyForExchange[0].name,
+                            value: ((+this.orderData.selectedCurrencyForExchange[0].sell / (+this.orderData.selectedCurrencyForExchange[1].sell)*(+text))).toFixed(6)
+                        };
+                         this.orderData.toSum = {
+                            currency: this.orderData.selectedCurrencyForExchange[1].name,
+                            value: text
+                        }
+                        if (this.orderData.selectedCurrencyForExchange[1].type === "crypto") {
+                            UIManager.inputExchangeNetwork(chatId);
+                        } else {
+                            this.inputEventAwait = {
+                                event:ORDERS_EVENTS.ORDER_INPUT_WALLET_AWAIT,
+                                data: null
+                            };
+                            UIManager.inputWaletAwait(chatId, this.orderData.selectedCurrencyForExchange[1].type)
+                        }
+                    } else {
+                        UIManager.inputCurrencyAmountError(chatId).then(()=> {
+                            this.inputEventAwait = {
+                                event:ORDERS_EVENTS.ORDER_INPUT_AMOUNT_AWAIT,
+                                data: null
+                            };
+                            UIManager.inputCurrencyAmountAwait(chatId);
+                        })
+                    }
                     break;
                 default:
                     console.log('WRONG inputEventAwait PARAMS:', this.inputEventAwait)
@@ -360,6 +468,17 @@ class BotController {
 
     clean() {
         this.bot.removeAllListeners();
+        this.orderData = {
+            selectedCurrencyForExchange: [],
+            wallet: '',
+            network: '',
+            transactionID: '',
+            status: '',
+            network: '',
+            timestamp: '',
+            coupon: '',
+            login: ''
+        }
     }
 
 }
