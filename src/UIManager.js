@@ -7,6 +7,7 @@ class UIManager {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: `${getEmoji(EMOJI_NAMES.CREATE_LINK)} Замовити обмін`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CREATE_NEW_ORDER }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.FIND)} Перевірити статус ордеру`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.FIND_ORDER }],
                     [{ text: `${getEmoji(EMOJI_NAMES.MY_LINKS)} Зв'язок з представником`, url: "https://t.me/artem_hontar" }],
                     [{ text: `${getEmoji(EMOJI_NAMES.CHANGE_PRICE)} Актуальний курс`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_CURRENCY_VALUES }],
                     [{ text: `${getEmoji(EMOJI_NAMES.SETTINGS)} Про бот`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.BOT_INFO }],
@@ -26,9 +27,9 @@ class UIManager {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: `${getEmoji(EMOJI_NAMES.RESERVED)} Cписок валют`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_CURRENCY_LIST }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.RESERVED)} Відкриті оредри`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_PENDING_ORDERS_DATA }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.LIST)} Переглянути останні транзакції`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CHAT }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.DETAIL)} Переглянути транзакцію`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CHAT }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.OPEN)} Відкриті оредри`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_PENDING_ORDERS_DATA }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.LIST)} Переглянути останні транзакції`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_ORDERS_DATA }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.FIND)} Перевірити статус ордеру`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.FIND_ORDER }],
                     [{ text: `${getEmoji(EMOJI_NAMES.NOTIFICATION)} Зробити оголошення`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.NOTIFICATION }],
                     [{ text: `${getEmoji(EMOJI_NAMES.SETTINGS)} Про бот`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.BOT_INFO }],
                 ]
@@ -117,6 +118,22 @@ class UIManager {
         }
     }
 
+    orderslistUIButtons(ordersList) {
+        const markupArray = [];
+        ordersList.forEach(element => {
+            markupArray.push(
+                [
+                    { text: `${getEmoji(EMOJI_NAMES.LINK)} ${element.transactionID}: ${element.fromSum.currency} ${element.fromSum.value} ${element.toSum.currency} ${element.toSum.value}`, callback_data: `${ORDERS_EVENTS.ORDER_INFO}${element.transactionID.toString()}`},
+                ]
+            )
+        });
+        return {
+            reply_markup: {
+                inline_keyboard: markupArray
+            }
+        }
+    }
+
     orderDataUIButtons(transactionID) {
         return {
             reply_markup: {
@@ -153,10 +170,13 @@ class UIManager {
     currencyValuelistUI(chatId, currencyList) {
         let currencyString = "";
         for (const currency in currencyList) {
-            const el = currencyList[currency];
-            currencyString += `${currency}: ${el.buy} \n / ${el.sell}`
+            if (currency !== 'UAH') {
+                const el = currencyList[currency];
+                currencyString += `${currency}: ${el.buy} UAH / ${el.sell} UAH \n`
+            }
+
         }
-        this.bot.sendMessage(chatId, `Курс валют \n` + currencyString);
+        this.bot.sendMessage(chatId, `Курс валют: придбати / продати \n` + currencyString);
     }
 
     pleaseInputData(chatId) {
@@ -175,6 +195,10 @@ class UIManager {
         this.bot.sendMessage(chatId, `Список відкритих ордерів`, this.pendingOrderslistUIButtons(ordersList));
     }
 
+    ordersList(chatId, ordersList)  {
+        this.bot.sendMessage(chatId, `Список ордерів`, this.orderslistUIButtons(ordersList)); 
+    }
+
     orderInfoUI(chatId, data, withButtons = false) {
         let text = `Дані ордеру:
 id: ${data.transactionID}
@@ -183,9 +207,11 @@ id: ${data.transactionID}
 Переказав: ${data.fromSum.value} ${data.fromSum.currency}
 Отримає: ${data.toSum.value} ${data.toSum.currency}
 Рахунок отримувача: ${data.wallet}
+
 `;
         if (data.network) { text += `Мережа: ${data.network}` }
-        if (withButtons) {
+        if (data.proofHash) { text += `Хеш: ${data.proofHash}` }
+        if (withButtons && data.status === 'pending') {
             this.bot.sendMessage(chatId, text, this.orderDataUIButtons(data.transactionID))
         } else {
             this.bot.sendMessage(chatId, text);
@@ -224,12 +250,20 @@ id: ${data.transactionID}
         this.bot.sendMessage(chatId, `Оберіть мережу для переказу`, this.exchangeNetworksList); 
     }
 
+    orderIdAwait(chatId) {
+        this.bot.sendMessage(chatId, 'Введіть номер ордера'); 
+    }
+
     inputWaletAwait(chatId, selectedCurrencyType) {
         if (selectedCurrencyType === 'crypto') {
             this.bot.sendMessage(chatId, `Введіть номер гаманця для зарахування`);
         } else {
             this.bot.sendMessage(chatId, `Введіть номер карти для зарахування`);
         }
+    }
+
+    orderInfoError(chatId) {
+        this.bot.sendMessage(chatId, `Ордера по такому номеру не знайдено`);
     }
 
 }

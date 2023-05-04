@@ -48,7 +48,6 @@ class BotController {
         // this.socket = io(SERVER_URL);
         this.authUser(msg).then(data => {
             if (data) {
-                console.log(data)
                 if (data.type === 'admin') {
                     UIManager.adminMainMenu(chatId, data);
                 }
@@ -57,7 +56,6 @@ class BotController {
                 }
             } else {
                 this.addNewUser(msg).then(data => {
-                    console.log(data)
                     UIManager.userMainMenu(data.id, data)
                 })
             }
@@ -171,6 +169,13 @@ class BotController {
                         this.notificationMessageAwait = true;
                         UIManager.notifyMessageAwait(chatId);
                         break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.FIND_ORDER:
+                        this.inputEventAwait = {
+                            event: query.data,
+                            data: null
+                        };
+                        UIManager.orderIdAwait(chatId)
+                        break;
                     case MAIN_MENU_UI_CONTROLS_EVENT.CREATE_NEW_ORDER:
                         this.getCurrencyList(chatId).then(data => {
                             UIManager.createNewOrderText(chatId, data)
@@ -192,6 +197,15 @@ class BotController {
                     case MAIN_MENU_UI_CONTROLS_EVENT.GET_PENDING_ORDERS_DATA:
                         this.getPendingOrders(chatId).then(data => {
                             UIManager.pendingOrderslist(chatId, data);
+                        });
+                        break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.GET_ORDERS_DATA:
+                        this.getOrdersData(chatId).then(data => {
+                            const arrayOrders = []
+                            for (const key in data) {
+                                arrayOrders.push(data[key])
+                            }
+                            UIManager.ordersList(chatId, arrayOrders);
                         });
                         break;
                     case ORDERS_EVENTS.SELECT_NETWORK:
@@ -287,6 +301,15 @@ class BotController {
                     this.orderData.wallet = text;
                     this.createNewOrder(msg.chat);
                     break;
+                case MAIN_MENU_UI_CONTROLS_EVENT.FIND_ORDER:
+                    this.getOrderData(text)
+                    .then((data) => {
+                        UIManager.orderInfoUI(chatId, data)
+                    })
+                    .catch((err) => {
+                        UIManager.orderInfoError(chatId)
+                    })
+                    break;
                 case ORDERS_EVENTS.ORDER_INPUT_AMOUNT_AWAIT:
                     if (!Number.isNaN((+text))) {
                         this.orderData.fromSum = {
@@ -329,21 +352,29 @@ class BotController {
     }
 
     async getPendingOrders(chatId) {
-        const currencyList = await fetch(`${SERVER_URL}/orders`)
-        .then(response => {
-            return response.json();
-        })
-        .then(jsonData => {
+        const pendingOrdersList = await this.getOrdersData().then(data => {
             const pendingOrdersArray = [];
-            for (const key in jsonData) {
-                if (jsonData[key].status === 'pending') {
-                    const element = jsonData[key];   
+            for (const key in data) {
+                if (data[key].status === 'pending') {
+                    const element = data[key];   
                     pendingOrdersArray.push(element);
                 }
             }
             return pendingOrdersArray;
         })
-        return currencyList;
+        return pendingOrdersList;
+
+    }
+
+    async getOrdersData() {
+        const ordersList = await fetch(`${SERVER_URL}/orders`)
+        .then(response => {
+            return response.json();
+        })
+        .then(jsonData => {
+            return jsonData;
+        })
+        return ordersList;
     }
 
     async getOrderData(transactionID) {

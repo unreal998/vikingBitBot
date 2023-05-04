@@ -55,6 +55,10 @@ function getEmoji(emojiName) {
             return '💳'
         case EMOJI_NAMES.MONEY:
             return '💸'
+        case EMOJI_NAMES.FIND:
+            return '🔍'
+        case EMOJI_NAMES.OPEN:
+            return '📖'
         default:
             return '❓'
     }
