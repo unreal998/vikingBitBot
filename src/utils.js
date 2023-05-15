@@ -59,6 +59,10 @@ function getEmoji(emojiName) {
             return '🔍'
         case EMOJI_NAMES.OPEN:
             return '📖'
+        case EMOJI_NAMES.MANAGER:
+            return '🧑‍💻'
+        case EMOJI_NAMES.NEW_ADMIN:
+            return '👨‍💼'
         default:
             return '❓'
     }

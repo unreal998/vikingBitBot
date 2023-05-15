@@ -30,6 +30,9 @@ class UIManager {
                     [{ text: `${getEmoji(EMOJI_NAMES.OPEN)} Відкриті оредри`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_PENDING_ORDERS_DATA }],
                     [{ text: `${getEmoji(EMOJI_NAMES.LIST)} Переглянути останні транзакції`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_ORDERS_DATA }],
                     [{ text: `${getEmoji(EMOJI_NAMES.FIND)} Перевірити статус ордеру`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.FIND_ORDER }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.CARD)} Рахунки`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.WALLETS }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.MANAGER)} Змінити контактну особу`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.CHANGE_CONTACT_MANAGER }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.NEW_ADMIN)} Додати адміна`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.ADD_NEW_ADMIN }],
                     [{ text: `${getEmoji(EMOJI_NAMES.NOTIFICATION)} Зробити оголошення`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.NOTIFICATION }],
                     [{ text: `${getEmoji(EMOJI_NAMES.SETTINGS)} Про бот`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.BOT_INFO }],
                 ]
@@ -47,6 +50,23 @@ class UIManager {
                     { text: `${getEmoji(EMOJI_NAMES.MONEY)} SELL ${key}: ${el.sell}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_SELL}${CURRENCY_NAMES[key.toUpperCase()]}`},
                     { text: `${getEmoji(EMOJI_NAMES.DOWN)} Мін. сума: ${el.minExchange}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_MIN_SUM}${CURRENCY_NAMES[key.toUpperCase()]}`},
                     { text: `${getEmoji(EMOJI_NAMES.RESERVED)} Резерв ${el.reserve}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_RESERVE}${CURRENCY_NAMES[key.toUpperCase()]}`}
+                ]
+            )
+        };
+        return {
+            reply_markup: {
+                inline_keyboard: markupArray
+            }
+        }
+    }
+
+    walletUIButtons(currencyList) {
+        const markupArray = [];
+        for (const key in currencyList) {
+            const el = currencyList[key];
+            markupArray.push(
+                [
+                    { text: `${getEmoji(EMOJI_NAMES.CARD)} ${key}: ${el}`, callback_data: `${MAIN_MENU_UI_CONTROLS_EVENT.CHANGE_WALLET}${key}`},
                 ]
             )
         };
@@ -264,6 +284,22 @@ id: ${data.transactionID}
 
     orderInfoError(chatId) {
         this.bot.sendMessage(chatId, `Ордера по такому номеру не знайдено`);
+    }
+
+    contactManagerLinkAwait(chatId) {
+        this.bot.sendMessage(chatId, `Введіть посилання на контакт менеджера`);
+    }
+
+    walletsData(chatId, walletsData) {
+        this.bot.sendMessage(chatId, `Данні рахунків:`, this.walletUIButtons(walletsData));
+    }
+
+    inputWalletAwait(chatId) {
+        this.bot.sendMessage(chatId, `Введіть новий рахунок`);
+    }
+
+    inputUsernameAwait(chatId) {
+        this.bot.sendMessage(chatId, `Введіть телеграм нікнейм користувача`);
     }
 
 }

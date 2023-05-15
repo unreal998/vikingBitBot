@@ -100,6 +100,23 @@ class BotController {
         return userData;
     }
 
+    async addNewAdmin(userName) {
+        const userData = await fetch(SERVER_URL + '/user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({userName})
+        })
+        .then(response => {
+            return response.json()
+        })
+        .then(data => {
+            return data
+        })
+        return userData;
+    }
+
     async createNewOrder(userData) {
         this.orderData.status = 'pending';
         this.orderData.timestamp = Date.now();
@@ -163,8 +180,13 @@ class BotController {
                     let separateChatId = [...query.data.matchAll(/(SELECT_NETWORK)(.*)/gm)];
                     query.data = separateChatId[0][1];
                     dataParam = separateChatId[0][2]; 
+                } else if (query.data.includes(MAIN_MENU_UI_CONTROLS_EVENT.CHANGE_WALLET)) {
+                    let separateChatId = [...query.data.matchAll(/(CHANGE_WALLET)(.*)/gm)];
+                    query.data = separateChatId[0][1];
+                    dataParam = separateChatId[0][2]; 
                 }
-                switch (query.data) {
+                
+                switch (query.data) {   
                     case MAIN_MENU_UI_CONTROLS_EVENT.NOTIFICATION:
                         this.notificationMessageAwait = true;
                         UIManager.notifyMessageAwait(chatId);
@@ -180,6 +202,18 @@ class BotController {
                         this.getCurrencyList(chatId).then(data => {
                             UIManager.createNewOrderText(chatId, data)
                         });
+                        break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.CHANGE_CONTACT_MANAGER:
+                        this.inputEventAwait = {
+                            event: query.data,
+                            data: null
+                        };
+                        UIManager.contactManagerLinkAwait(chatId)
+                        break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.WALLETS:
+                        this.getAppConfig().then(data => {
+                            UIManager.walletsData(chatId, {EURCard: data.EURCard, UAHCard: data.UAHCard, USDCard: data.USDCard, cryptoWallet: data.cryptoWallet})
+                        })
                         break;
                     case MAIN_MENU_UI_CONTROLS_EVENT.GET_CURRENCY_LIST:
                         this.getCurrencyList(chatId).then(data => {
@@ -208,6 +242,13 @@ class BotController {
                             UIManager.ordersList(chatId, arrayOrders);
                         });
                         break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.CHANGE_WALLET:
+                        this.inputEventAwait = {
+                            event:query.data,
+                            data: dataParam
+                        };
+                        UIManager.inputWalletAwait(chatId);
+                        break;
                     case ORDERS_EVENTS.SELECT_NETWORK:
                         this.orderData.network = dataParam;
                         this.inputEventAwait = {
@@ -215,6 +256,13 @@ class BotController {
                             data: null
                         };
                         UIManager.inputWaletAwait(chatId, this.orderData.selectedCurrencyForExchange[1].type)
+                        break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.ADD_NEW_ADMIN:
+                        this.inputEventAwait = {
+                            event:query.data,
+                            data: null
+                        };
+                        UIManager.inputUsernameAwait(chatId);
                         break;
                     case ORDERS_EVENTS.SET_CURRENCY_FOR_EXCHANGE: 
                         console.log(this.orderData.selectedCurrencyForExchange.length)
@@ -276,6 +324,34 @@ class BotController {
         })
     }
 
+    async getAppConfig() {
+        const appConfig = await fetch(`${SERVER_URL}/appConfig`)
+        .then(response => {
+            return response.json();
+        })
+        .then(jsonData => {
+            return jsonData;
+        })
+        return appConfig;
+    }   
+
+    async updateAppConfig(data) {
+        const appConfig = await fetch(SERVER_URL + '/appConfig', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            return response.json()
+        })
+        .then(data => {
+            return data
+        })
+        return appConfig;
+    }
+
     onMessageHandler(msg) {
         const chatId = msg.chat.id;
         const text = msg.text;
@@ -308,6 +384,28 @@ class BotController {
                     })
                     .catch((err) => {
                         UIManager.orderInfoError(chatId)
+                    })
+                    break;
+                case MAIN_MENU_UI_CONTROLS_EVENT.CHANGE_CONTACT_MANAGER:
+                    this.getAppConfig().then(data => {
+                        const newAppconfigData = {...data, conactManager: text}
+                        this.updateAppConfig(newAppconfigData).then(data => {
+                            this.bot.sendMessage(chatId, JSON.stringify(data))
+                        })
+                    })
+                    break;
+                case MAIN_MENU_UI_CONTROLS_EVENT.CHANGE_WALLET:
+                    this.getAppConfig().then(data => {
+                        const newAppconfigData = {...data};
+                        newAppconfigData[this.inputEventAwait.data] = text;
+                        this.updateAppConfig(newAppconfigData).then(data => {
+                            this.bot.sendMessage(chatId, JSON.stringify(data))
+                        })
+                    })
+                    break;
+                case MAIN_MENU_UI_CONTROLS_EVENT.ADD_NEW_ADMIN:
+                    this.addNewAdmin(text).then(data => {
+                        this.bot.sendMessage(chatId, JSON.stringify(data))
                     })
                     break;
                 case ORDERS_EVENTS.ORDER_INPUT_AMOUNT_AWAIT:
