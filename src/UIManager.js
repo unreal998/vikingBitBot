@@ -226,11 +226,10 @@ id: ${data.transactionID}
 Статус: ${data.status}
 Переказав: ${data.fromSum.value} ${data.fromSum.currency}
 Отримає: ${data.toSum.value} ${data.toSum.currency}
-Рахунок отримувача: ${data.wallet}
-
-`;
-        if (data.network) { text += `Мережа: ${data.network}` }
-        if (data.proofHash) { text += `Хеш: ${data.proofHash}` }
+Рахунок отримувача: ${data.wallet}`;
+        if (data.network) { text += `\nМережа: ${data.network}` }
+        if (data.proofHash) { text += `\nХеш: ${data.proofHash}` }
+        if (data.imgPath) {text += `\nПосилання на фото: ${data.imgPath}`}
         if (withButtons && data.status === 'pending') {
             this.bot.sendMessage(chatId, text, this.orderDataUIButtons(data.transactionID))
         } else {
