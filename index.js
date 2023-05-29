@@ -9,7 +9,7 @@ import {
 } from './src/constants.js';
 import UIManager from './src/UIManager.js';
 import {io} from "socket.io-client";
-import {getEmoji} from "./src/utils.js";
+import {fetchImageFromTelegram, getEmoji} from "./src/utils.js";
 
 class BotController {
     constructor(token) {
@@ -20,6 +20,12 @@ class BotController {
         this.notificationMessageAwait = false;
         this.inputEventAwait = '';
         this.onMessageHandler = this.onMessageHandler.bind(this);
+        this.appConfig = {
+            cryptoWallet: '',
+            UAHCard: '',
+            USDCard: '',
+            EURCard: ''
+        }
         this.orderData = {
             selectedCurrencyForExchange: [],
             wallet: '',
@@ -46,6 +52,11 @@ class BotController {
         const chatData = msg.chat;
         const chatId = chatData.id;
         // this.socket = io(SERVER_URL);
+        this.backToMainMenu(msg, chatId);
+        //         this.socket.emit('new-user', {chatId: chatId.toString()});
+    }
+
+    backToMainMenu(msg, chatId) {
         this.authUser(msg).then(data => {
             if (data) {
                 if (data.type === 'admin') {
@@ -59,7 +70,6 @@ class BotController {
                     UIManager.userMainMenu(data.id, data)
                 })
             }
-        //         this.socket.emit('new-user', {chatId: chatId.toString()});
         });
     }
 
@@ -72,7 +82,6 @@ class BotController {
             body: JSON.stringify(msg.chat)
         })
         .then(response => {
-            console.log(response)
             return response.json()
         })
         .then(data => {
@@ -83,7 +92,6 @@ class BotController {
     }
 
     async addNewUser(msg) {
-        console.log(msg)
         const userData = await fetch(SERVER_URL + '/user', {
             method: 'PUT',
             headers: {
@@ -257,6 +265,16 @@ class BotController {
                         };
                         UIManager.inputWaletAwait(chatId, this.orderData.selectedCurrencyForExchange[1].type)
                         break;
+                    case ORDERS_EVENTS.PAYMENT_COMPLEATE:
+                        this.inputEventAwait = {
+                            event: ORDERS_EVENTS.PAYMENT_COMPLEATE,
+                            data: null
+                        };
+                        UIManager.proofUI(chatId, this.orderData);
+                        break;
+                    case ORDERS_EVENTS.CANCEL:
+                        this.backToMainMenu(query.message, chatId);
+                        break;
                     case MAIN_MENU_UI_CONTROLS_EVENT.ADD_NEW_ADMIN:
                         this.inputEventAwait = {
                             event:query.data,
@@ -265,12 +283,10 @@ class BotController {
                         UIManager.inputUsernameAwait(chatId);
                         break;
                     case ORDERS_EVENTS.SET_CURRENCY_FOR_EXCHANGE: 
-                        console.log(this.orderData.selectedCurrencyForExchange.length)
                         if (this.orderData.selectedCurrencyForExchange.length < 1) {
                             this.getCurrencyList(chatId).then(data => {
                                 const selectedCurrency = data[dataParam];
                                 this.orderData.selectedCurrencyForExchange.push(selectedCurrency);
-                                console.log(this.orderData);
                                 UIManager.selectCurrencyForExchangeText(chatId, data, selectedCurrency)
                             });
                         }
@@ -373,9 +389,22 @@ class BotController {
                 case CURRENCY_EVENT.SET_CURRENCY_MIN_SUM:
                     this.setCurrencyMinSum(chatId, text, this.inputEventAwait)
                     break;
+                case ORDERS_EVENTS.PAYMENT_COMPLEATE:
+                    if (photo) {
+                        fetchImageFromTelegram(TOKEN, photo[2].file_id).then(data => {
+                            this.orderData.imgPath = data;
+                            this.createNewOrder(msg.chat);
+                        })
+                    } else {
+                        this.orderData.proofHash = text
+                        this.createNewOrder(msg.chat);
+                    }
+                    break;
                 case ORDERS_EVENTS.ORDER_INPUT_WALLET_AWAIT:
                     this.orderData.wallet = text;
-                    this.createNewOrder(msg.chat);
+                    this.getAppConfig().then(data => {
+                        UIManager.paymentInfoUI(chatId, this.orderData, data)
+                    })
                     break;
                 case MAIN_MENU_UI_CONTROLS_EVENT.FIND_ORDER:
                     this.getOrderData(text)
@@ -481,7 +510,6 @@ class BotController {
             return response.json();
         })
         .then(jsonData => {
-            console.log(jsonData)
             return jsonData;
         })
         console.log(orderData)
@@ -572,7 +600,6 @@ class BotController {
         }).then(responseData => {
             return responseData;
         })
-        console.log(currencyResponce)
         this.inputEventAwait = null;
         this.bot.sendMessage(chatId, JSON.stringify(currencyResponce))
     }

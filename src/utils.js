@@ -1,4 +1,5 @@
 import { EMOJI_NAMES } from './constants.js'
+import fetch from "node-fetch";
 /**
  * Returns emoji from emoji name.
  *
@@ -68,4 +69,23 @@ function getEmoji(emojiName) {
     }
 }
 
-export { getEmoji };
+/**
+ * Returns path to photo from telegram API.
+ *
+ * @param {string} TOKEN telegram bot API token.
+ * @param {string} fileId unquie field ID.
+ * @return {string} uri to photo
+ */
+async function fetchImageFromTelegram(token, fileId) {
+    const fileDataUrl = `https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`;
+    const fileData = await fetch(fileDataUrl)
+    .then(response => {
+        return response.json()
+    })
+    .then(data => {
+        return data
+    })
+    return `https://api.telegram.org/file/bot${token}/${fileData.result.file_path}`
+}
+
+export { getEmoji, fetchImageFromTelegram };

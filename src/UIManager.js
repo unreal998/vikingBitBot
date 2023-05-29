@@ -23,11 +23,22 @@ class UIManager {
                 ]
             }
         }
+
+        this.orderConfirmButtons = {
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        { text: `${getEmoji(EMOJI_NAMES.YES)} Продовжити`, callback_data: `${ORDERS_EVENTS.PAYMENT_COMPLEATE}` },
+                        { text: `${getEmoji(EMOJI_NAMES.NO)} Відхилити`, callback_data: `${ORDERS_EVENTS.CANCEL}` }
+                    ],
+                ]
+            }
+        }
         this.adminMainMenuUI = {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: `${getEmoji(EMOJI_NAMES.RESERVED)} Cписок валют`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_CURRENCY_LIST }],
-                    [{ text: `${getEmoji(EMOJI_NAMES.OPEN)} Відкриті оредри`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_PENDING_ORDERS_DATA }],
+                    [{ text: `${getEmoji(EMOJI_NAMES.OPEN)} Відкриті ордери`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_PENDING_ORDERS_DATA }],
                     [{ text: `${getEmoji(EMOJI_NAMES.LIST)} Переглянути останні транзакції`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_ORDERS_DATA }],
                     [{ text: `${getEmoji(EMOJI_NAMES.FIND)} Перевірити статус ордеру`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.FIND_ORDER }],
                     [{ text: `${getEmoji(EMOJI_NAMES.CARD)} Рахунки`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.WALLETS }],
@@ -45,12 +56,16 @@ class UIManager {
         for (const key in currencyList) {
             const el = currencyList[key];
             markupArray.push(
-                [
-                    { text: `${getEmoji(EMOJI_NAMES.MONEY)} BUY ${key}: ${el.buy}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}`},
-                    { text: `${getEmoji(EMOJI_NAMES.MONEY)} SELL ${key}: ${el.sell}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_SELL}${CURRENCY_NAMES[key.toUpperCase()]}`},
-                    { text: `${getEmoji(EMOJI_NAMES.DOWN)} Мін. сума: ${el.minExchange}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_MIN_SUM}${CURRENCY_NAMES[key.toUpperCase()]}`},
-                    { text: `${getEmoji(EMOJI_NAMES.RESERVED)} Резерв ${el.reserve}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_RESERVE}${CURRENCY_NAMES[key.toUpperCase()]}`}
-                ]
+                [{ text: `${getEmoji(EMOJI_NAMES.MONEY)} ${key} BUY: ${el.buy}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}`}]
+            )
+            markupArray.push( 
+                [{ text: `${getEmoji(EMOJI_NAMES.MONEY)} ${key} SELL: ${el.sell}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_SELL}${CURRENCY_NAMES[key.toUpperCase()]}`}]
+            )
+            markupArray.push(
+                [{ text: `${getEmoji(EMOJI_NAMES.DOWN)} Мін. сума: ${el.minExchange}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_MIN_SUM}${CURRENCY_NAMES[key.toUpperCase()]}`}]
+            )
+            markupArray.push(
+                [{ text: `${getEmoji(EMOJI_NAMES.RESERVED)} Резерв ${el.reserve}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_RESERVE}${CURRENCY_NAMES[key.toUpperCase()]}`}]
             )
         };
         return {
@@ -120,9 +135,7 @@ class UIManager {
 
     pendingOrderslistUIButtons(ordersList) {
         const markupArray = [];
-        console.log(ordersList)
         ordersList.forEach(element => {
-            console.log(element)
             markupArray.push(
                 [
                     { text: `${getEmoji(EMOJI_NAMES.LINK)} ${element.transactionID}: ${element.fromSum.currency} ${element.fromSum.value} ${element.toSum.currency} ${element.toSum.value}`, callback_data: `${ORDERS_EVENTS.ORDER_INFO}${element.transactionID.toString()}`},
@@ -143,7 +156,7 @@ class UIManager {
         ordersList.forEach(element => {
             markupArray.push(
                 [
-                    { text: `${getEmoji(EMOJI_NAMES.LINK)} ${element.transactionID}: ${element.fromSum.currency} ${element.fromSum.value} ${element.toSum.currency} ${element.toSum.value}`, callback_data: `${ORDERS_EVENTS.ORDER_INFO}${element.transactionID.toString()}`},
+                    { text: `${getEmoji(EMOJI_NAMES.LINK)} ${element.transactionID}: ${element.fromSum?.currency} ${element.fromSum?.value} ${element.toSum?.currency} ${element.toSum?.value}`, callback_data: `${ORDERS_EVENTS.ORDER_INFO}${element.transactionID?.toString()}`},
                 ]
             )
         });
@@ -216,7 +229,37 @@ class UIManager {
     }
 
     ordersList(chatId, ordersList)  {
-        this.bot.sendMessage(chatId, `Список ордерів`, this.orderslistUIButtons(ordersList)); 
+        this.bot.sendMessage(chatId, `Список ордерів`, this.orderslistUIButtons(ordersList));
+    }
+
+    walletSelector(receiveWallet, appConfig) {
+        switch(receiveWallet) {
+            case 'UAH':
+                return appConfig.UAHCard
+            case 'EUR':
+                return appConfig.EURCard
+            case 'USD':
+                return appConfig.USDCard
+            default:
+                return appConfig.cryptoWallet
+        }
+    }
+
+    paymentInfoUI(chatId, orderData, appConfig) {
+        let text = `Після перекау сумми замовлення натисніть "Продовжити"
+Реквізити:
+Рахунок: ${this.walletSelector(orderData.fromSum.currency, appConfig)}
+Сумма переказу: ${orderData.fromSum.value} ${orderData.fromSum.currency}
+Ви отримаєте: ${orderData.toSum.value} ${orderData.toSum.currency}`;
+        if (orderData.network) { text += `\nМережа: ${orderData.network}` }
+        this.bot.sendMessage(chatId, text, this.orderConfirmButtons)
+    }
+
+    proofUI(chatId, orderData) {
+        let text = 'Надішліть';
+        const paymentTypeProof = orderData.selectedCurrencyForExchange[0].type === 'crypto' ? ' хеш транзакції' : ' скріншот переказу';
+        text += paymentTypeProof;
+        this.bot.sendMessage(chatId, text); 
     }
 
     orderInfoUI(chatId, data, withButtons = false) {
