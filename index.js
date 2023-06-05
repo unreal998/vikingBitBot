@@ -155,8 +155,7 @@ class BotController {
                     let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_BUY)(.*)/gm)];
                     query.data = separateChatId[0][1];
                     dataParam = separateChatId[0][2];
-                }
-                else if (query.data.includes(CURRENCY_EVENT.SET_CURRENCY_SELL)) {
+                } else if (query.data.includes(CURRENCY_EVENT.SET_CURRENCY_SELL)) {
                     let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_SELL)(.*)/gm)];
                     query.data = separateChatId[0][1];
                     dataParam = separateChatId[0][2];
@@ -190,6 +189,14 @@ class BotController {
                     dataParam = separateChatId[0][2]; 
                 } else if (query.data.includes(MAIN_MENU_UI_CONTROLS_EVENT.CHANGE_WALLET)) {
                     let separateChatId = [...query.data.matchAll(/(CHANGE_WALLET)(.*)/gm)];
+                    query.data = separateChatId[0][1];
+                    dataParam = separateChatId[0][2]; 
+                } else if (query.data.includes(CURRENCY_EVENT.SET_CURRENCY_MULTIPLIER_SELL)) {
+                    let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_MULTIPLIER_SELL)(.*)/gm)];
+                    query.data = separateChatId[0][1];
+                    dataParam = separateChatId[0][2]; 
+                } else if (query.data.includes(CURRENCY_EVENT.SET_CURRENCY_MULTIPLIER_BUY)) {
+                    let separateChatId = [...query.data.matchAll(/(SET_CURRENCY_MULTIPLIER_BUY)(.*)/gm)];
                     query.data = separateChatId[0][1];
                     dataParam = separateChatId[0][2]; 
                 }
@@ -385,6 +392,12 @@ class BotController {
                 case CURRENCY_EVENT.SET_CURRENCY_BUY:
                     this.setCurrencyBuy(chatId, text, this.inputEventAwait)
                     break;
+                case CURRENCY_EVENT.SET_CURRENCY_MULTIPLIER_SELL:
+                    this.setCurrencyMultiplierSell(chatId, text, this.inputEventAwait)
+                    break;
+                case CURRENCY_EVENT.SET_CURRENCY_MULTIPLIER_BUY:
+                    this.setCurrencyMultiplierBuy(chatId, text, this.inputEventAwait)
+                    break;
                 case CURRENCY_EVENT.SET_CURRENCY_SELL:
                     this.setCurrencySell(chatId, text, this.inputEventAwait)
                     break;
@@ -574,6 +587,38 @@ class BotController {
 
     async setCurrencySell(chatId, value, eventData) {
         const currencyResponce = await fetch(`${SERVER_URL}/currencySell`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({currenyName: eventData.data, value})
+        }).then(response => {
+            return response.json();
+        }).then(responseData => {
+            return responseData;
+        })
+        this.inputEventAwait = null;
+        this.bot.sendMessage(chatId, JSON.stringify(currencyResponce))
+    }
+
+    async setCurrencyMultiplierBuy(chatId, value, eventData) {
+        const currencyResponce = await fetch(`${SERVER_URL}/currencyMultiplierBuy`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({currenyName: eventData.data, value})
+        }).then(response => {
+            return response.json();
+        }).then(responseData => {
+            return responseData;
+        })
+        this.inputEventAwait = null;
+        this.bot.sendMessage(chatId, JSON.stringify(currencyResponce))
+    }
+
+    async setCurrencyMultiplierSell(chatId, value, eventData) {
+        const currencyResponce = await fetch(`${SERVER_URL}/currencyMultiplierSell`, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json'
