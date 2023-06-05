@@ -206,6 +206,11 @@ class BotController {
                         };
                         UIManager.orderIdAwait(chatId)
                         break;
+                    case MAIN_MENU_UI_CONTROLS_EVENT.SET_CURRENCY_VALUES_CONFIG:
+                        this.getExchangeConfig().then(data => {
+                            UIManager.currencyConfig(chatId, data)
+                        })
+                        break;
                     case MAIN_MENU_UI_CONTROLS_EVENT.CREATE_NEW_ORDER:
                         this.getCurrencyList(chatId).then(data => {
                             UIManager.createNewOrderText(chatId, data)
@@ -531,6 +536,17 @@ class BotController {
 
     async getCurrencyList(chatId) {
         const currencyList = await fetch(`${SERVER_URL}/currencyList`)
+        .then(response => {
+            return response.json();
+        })
+        .then(jsonData => {
+            return jsonData;
+        })
+        return currencyList
+    }
+
+    async getExchangeConfig() {
+        const currencyList = await fetch(`${SERVER_URL}/exchangeConfig`)
         .then(response => {
             return response.json();
         })

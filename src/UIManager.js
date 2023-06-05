@@ -38,6 +38,7 @@ class UIManager {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: `${getEmoji(EMOJI_NAMES.RESERVED)} Cписок валют`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_CURRENCY_LIST }],
+                    [{ text: `Конфігурація курсу`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.SET_CURRENCY_VALUES_CONFIG}],
                     [{ text: `${getEmoji(EMOJI_NAMES.OPEN)} Відкриті ордери`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_PENDING_ORDERS_DATA }],
                     [{ text: `${getEmoji(EMOJI_NAMES.LIST)} Переглянути останні транзакції`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.GET_ORDERS_DATA }],
                     [{ text: `${getEmoji(EMOJI_NAMES.FIND)} Перевірити статус ордеру`, callback_data: MAIN_MENU_UI_CONTROLS_EVENT.FIND_ORDER }],
@@ -51,21 +52,82 @@ class UIManager {
         }
     }
 
+    currencyConfigButtonsUI(currencyList) {
+        const markupArray = [];
+        for (const key in currencyList) {
+            const currencys = currencyList[key];
+            if (key === 'EUR') {
+                markupArray.push(
+                    [{ text: `Конфігурація EUR пар`, callback_data: `${EMPTY_EVENT}`}]
+                )
+                for (const elKey in currencys) {
+                    const el = currencys[elKey];
+                    markupArray.push(
+                        [
+                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} BUY: ${el.buy}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`},
+                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} BUY multiplier: ${el.buyMultiplier}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`}
+                        ]
+                    )
+                    markupArray.push( 
+                        [
+                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} SELL: ${el.sell}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_SELL}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`},
+                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} SELL multiplier: ${el.sellMultiplier}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`}
+                        ]
+                    )
+                }
+            } else if (key === 'USD') {
+                markupArray.push(
+                    [{ text: `Конфігурація USD пар`, callback_data: `${EMPTY_EVENT}`}]
+                )
+                for (const elKey in currencys) {
+                    const el = currencys[elKey];
+                    markupArray.push(
+                        [
+                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} BUY: ${el.buy}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`},
+                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} BUY multiplier: ${el.buyMultiplier}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`}
+                        ]
+                    )
+                    markupArray.push( 
+                        [
+                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} SELL: ${el.sell}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_SELL}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`},
+                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} SELL multiplier: ${el.sellMultiplier}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`}
+                        ]
+                    )
+                }
+            } else if (key === 'USDT') {
+                markupArray.push(
+                    [{ text: `Конфігурація USDT пар`, callback_data: `${EMPTY_EVENT}`}]
+                )
+                for (const elKey in currencys) {
+                    const el = currencys[elKey];
+                    markupArray.push(
+                        [
+                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} BUY multiplier: ${el.buyMultiplier}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`},
+                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} SELL multiplier: ${el.sellMultiplier}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`}
+                        ]
+                    )
+                }
+            }
+        };
+        return {
+            reply_markup: {
+                inline_keyboard: markupArray
+            }
+        }
+    }
+
     currencylistUIButtons(currencyList) {
         const markupArray = [];
         for (const key in currencyList) {
             const el = currencyList[key];
-            markupArray.push(
-                [{ text: `${getEmoji(EMOJI_NAMES.MONEY)} ${key} BUY: ${el.buy}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}`}]
-            )
             markupArray.push( 
-                [{ text: `${getEmoji(EMOJI_NAMES.MONEY)} ${key} SELL: ${el.sell}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_SELL}${CURRENCY_NAMES[key.toUpperCase()]}`}]
+                [{ text: `${getEmoji(EMOJI_NAMES.MONEY)} ${key} `, callback_data: `${EMPTY_EVENT}`}]
             )
             markupArray.push(
-                [{ text: `${getEmoji(EMOJI_NAMES.DOWN)} Мін. сума: ${el.minExchange}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_MIN_SUM}${CURRENCY_NAMES[key.toUpperCase()]}`}]
-            )
-            markupArray.push(
-                [{ text: `${getEmoji(EMOJI_NAMES.RESERVED)} Резерв ${el.reserve}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_RESERVE}${CURRENCY_NAMES[key.toUpperCase()]}`}]
+                [
+                    { text: `${getEmoji(EMOJI_NAMES.DOWN)} Мін. сума: ${el.minExchange}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_MIN_SUM}${CURRENCY_NAMES[key.toUpperCase()]}`},
+                    { text: `${getEmoji(EMOJI_NAMES.RESERVED)} Резерв ${el.reserve}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_RESERVE}${CURRENCY_NAMES[key.toUpperCase()]}`}
+                ],
             )
         };
         return {
@@ -282,6 +344,10 @@ id: ${data.transactionID}
 
     orderRjected(chatId) {
         this.bot.sendMessage(chatId, `Ордер відхилено`);
+    }
+
+    currencyConfig(chatId, currencyList) {
+        this.bot.sendMessage(chatId, `Конфігурація валют`, this.currencyConfigButtonsUI(currencyList));
     }
 
     orderConfirm(chatId) {
