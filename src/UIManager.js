@@ -102,7 +102,7 @@ class UIManager {
                     const el = currencys[elKey];
                     markupArray.push(
                         [
-                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} BUY multiplier: ${el.buyMultiplier}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_BUY}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`},
+                            { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} BUY multiplier: ${el.buyMultiplier}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_MULTIPLIER_BUY}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`},
                             { text: `${getEmoji(EMOJI_NAMES.MONEY)} ${elKey} SELL multiplier: ${el.sellMultiplier}`, callback_data: `${CURRENCY_EVENT.SET_CURRENCY_MULTIPLIER_SELL}${CURRENCY_NAMES[key.toUpperCase()]}-${CURRENCY_NAMES[elKey.toUpperCase()]}`}
                         ]
                     )
