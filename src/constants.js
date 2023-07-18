@@ -1,5 +1,5 @@
 //TEST
-const SERVER_URL = 'http://localhost:3003'
+const SERVER_URL = 'https://localhost:3003'
 
 const EMOJI_NAMES = {
     MY_LINKS: 'myLinks',
