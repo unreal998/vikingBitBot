@@ -2,7 +2,7 @@ import BotAPI from 'node-telegram-bot-api';
 import fetch from "node-fetch";
 import {
     MAIN_MENU_UI_CONTROLS_EVENT,
-    SERVER_URL, CURRENCY_NAMES,
+    SERVER_URL,
     TOKEN,
     CURRENCY_EVENT,
     ORDERS_EVENTS, EMOJI_NAMES, EMPTY_EVENT
@@ -11,6 +11,7 @@ import UIManager from './src/UIManager.js';
 import {io} from "socket.io-client";
 import {fetchImageFromTelegram, getEmoji} from "./src/utils.js";
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
 class BotController {
     constructor(token) {
         this.bot = new BotAPI(token, { polling: true });
